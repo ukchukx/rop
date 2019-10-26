@@ -78,8 +78,7 @@ defmodule Rop do
   defmacro bind(args, func) do
     quote do
       (fn ->
-        result = unquote(args) |> unquote(func)
-        {:ok, result}
+        {:ok, unquote(args) |> unquote(func)}
       end).()
     end
   end
@@ -122,6 +121,29 @@ defmodule Rop do
         unquoted_args = unquote(args)
         unquoted_args |> unquote(func)
         {:ok, unquoted_args}
+      end).()
+    end
+  end
+
+  @doc ~s"""
+    Similar to `tee`, but propagates any error response from the side effect.
+
+    Example:
+      iex> inc = fn(x)-> IO.inspect(x); {:ok, x + 1} end
+      iex> 1 |> errorTee((inc).()) >>> errorTee((inc).()) >>> errorTee((inc).())
+      {:ok, 1}
+      iex> inc = fn(x)-> IO.inspect(x); {:error, :bad} end
+      iex> 1 |> errorTee((inc).()) >>> errorTee((inc).()) >>> errorTee((inc).())
+      {:error, :bad}
+  """
+  defmacro errorTee(args, func) do
+    quote do
+      (fn ->
+        unquoted_args = unquote(args)
+        case unquoted_args |> unquote(func) do
+          {:error, _} = expr -> expr
+          _ -> {:ok, unquoted_args}
+        end
       end).()
     end
   end

@@ -48,6 +48,39 @@ defmodule RopTest do
       end)
       assert capture_io(a) == "2\n"
     end
+
+    test "arguments are returned if the function returns an error" do
+      a = (fn ->
+        0 |> simple_inc |> simple_inc |> tee(simple_sideeffect_with_error)
+      end)
+
+      assert a.() == {:ok, 2}
+    end
+  end
+
+  describe "errorTee" do
+    test "passes the arguments through after executing them in the function" do
+      a = (fn ->
+        0 |> simple_inc |> simple_inc |> errorTee(simple_sideeffect)
+      end)
+
+      assert a.() == {:ok, 2}
+    end
+
+    test "the sideeffect in the function is executed" do
+      a = (fn ->
+        0 |> simple_inc |> simple_inc |> errorTee(simple_sideeffect)
+      end)
+      assert capture_io(a) == "2\n"
+    end
+
+    test "error result is returned if the function returns an error" do
+      a = (fn ->
+        0 |> simple_inc |> simple_inc |> errorTee(simple_sideeffect_with_error)
+      end)
+
+      assert a.() == {:error, :bad}
+    end
   end
 
   describe "bind" do
@@ -61,6 +94,11 @@ defmodule RopTest do
   defp simple_sideeffect(a) do
     IO.inspect a
     :unrelated
+  end
+
+  defp simple_sideeffect_with_error(a) do
+    IO.inspect a
+    {:error, :bad}
   end
 
   defp inc(cnt) do
