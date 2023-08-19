@@ -1,5 +1,5 @@
 defmodule RopTest do
-  use ExSpec, async: true
+  use ExUnit.Case
   import ExUnit.CaptureIO
   use Rop
   doctest Rop
@@ -58,10 +58,10 @@ defmodule RopTest do
     end
   end
 
-  describe "errorTee" do
+  describe "error_tee" do
     test "passes the arguments through after executing them in the function" do
       a = (fn ->
-        0 |> simple_inc |> simple_inc |> errorTee(simple_sideeffect)
+        0 |> simple_inc |> simple_inc |> error_tee(simple_sideeffect)
       end)
 
       assert a.() == {:ok, 2}
@@ -69,14 +69,14 @@ defmodule RopTest do
 
     test "the sideeffect in the function is executed" do
       a = (fn ->
-        0 |> simple_inc |> simple_inc |> errorTee(simple_sideeffect)
+        0 |> simple_inc |> simple_inc |> error_tee(simple_sideeffect)
       end)
       assert capture_io(a) == "2\n"
     end
 
     test "error result is returned if the function returns an error" do
       a = (fn ->
-        0 |> simple_inc |> simple_inc |> errorTee(simple_sideeffect_with_error)
+        0 |> simple_inc |> simple_inc |> error_tee(simple_sideeffect_with_error)
       end)
 
       assert a.() == {:error, :bad}

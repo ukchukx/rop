@@ -15,18 +15,18 @@ defmodule Rop do
   Raise the arguments else
 
   For example:
-      iex> do_try({:ok, 1})
+      iex> unwrap({:ok, 1})
       1
 
-      iex> do_try({:error, "some"})
+      iex> unwrap({:error, "some"})
       ** (RuntimeError) some
 
-      iex> do_try({:anything, "some"})
+      iex> unwrap({:anything, "some"})
       ** (ArgumentError) raise/1 and reraise/2 expect a module name, string or exception as the first argument, got: {:anything, \"some\"}
   """
-  def do_try({:ok, x}), do: x
-  def do_try({:error, x}), do: raise x
-  def do_try(x), do: raise x
+  def unwrap({:ok, x}), do: x
+  def unwrap({:error, x}), do: raise x
+  def unwrap(x), do: raise x
 
   @doc ~s"""
     Wraps the value in an ok tagged tuple like {:ok, value}
@@ -130,13 +130,13 @@ defmodule Rop do
 
     Example:
       iex> inc = fn(x)-> IO.inspect(x); {:ok, x + 1} end
-      iex> 1 |> errorTee((inc).()) >>> errorTee((inc).()) >>> errorTee((inc).())
+      iex> 1 |> error_tee((inc).()) >>> error_tee((inc).()) >>> error_tee((inc).())
       {:ok, 1}
       iex> inc = fn(x)-> IO.inspect(x); {:error, :bad} end
-      iex> 1 |> errorTee((inc).()) >>> errorTee((inc).()) >>> errorTee((inc).())
+      iex> 1 |> error_tee((inc).()) >>> error_tee((inc).()) >>> error_tee((inc).())
       {:error, :bad}
   """
-  defmacro errorTee(args, func) do
+  defmacro error_tee(args, func) do
     quote do
       (fn ->
         unquoted_args = unquote(args)
